@@ -3,7 +3,12 @@ defmodule AssocTest do
 
   import Ecto.Query
 
-  alias ExAudit.Test.{Repo, Version, BlogPost, Comment, Util, UserGroup}
+  alias ExAudit.Test.{TrackerRepo, Repo, Version, BlogPost, Comment, Util, UserGroup}
+
+  setup _ do
+    :erlang.system_flag(:backtrace_depth, 50)
+    :ok
+  end
 
   test "comment lifecycle tracked" do
     user = Util.create_user()
@@ -61,7 +66,7 @@ defmodule AssocTest do
     comment_ids = Enum.map(comments, & &1.id)
 
     versions =
-      Repo.all(
+      TrackerRepo.all(
         from(v in Version,
           where: v.entity_id in ^comment_ids,
           where: v.entity_schema == ^Comment
@@ -86,5 +91,29 @@ defmodule AssocTest do
       |> no_assoc_constraint(:groups)
 
     assert {:error, %Ecto.Changeset{}} = Repo.delete(deletion)
+  end
+
+  test "should ignore audit" do
+    ExAudit.track(version: Ecto.UUID.generate())
+    user = Util.create_user()
+
+    ExAudit.track(actor_id: user.id)
+
+    params = %{
+      title: "Controversial post",
+      author_id: user.id,
+      comments: [
+        %{
+          body: "lorem impusdrfnia",
+          author_id: user.id
+        }
+      ]
+    }
+
+    changeset = BlogPost.changeset(%BlogPost{}, params)
+    {:ok, %{comments: [comment]} = blog} = Repo.insert(changeset, ignore_audit: true)
+
+    assert [] = Repo.history(blog)
+    assert [] = Repo.history(comment)
   end
 end

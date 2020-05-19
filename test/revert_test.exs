@@ -3,7 +3,7 @@ defmodule RevertTest do
 
   import Ecto.Query
 
-  alias ExAudit.Test.{Repo, User, Version, Util}
+  alias ExAudit.Test.{TrackerRepo, Repo, User, Version, Util}
 
   test "should revert changes" do
     user = Util.create_user()
@@ -19,7 +19,7 @@ defmodule RevertTest do
     Repo.update(ch)
 
     version =
-      Repo.one(
+      TrackerRepo.one(
         from(v in Version,
           where: v.entity_id == ^user2.id,
           where: v.entity_schema == ^User,
@@ -34,7 +34,7 @@ defmodule RevertTest do
     assert user2_rolled_back.name == "Horst Dieter Schaf"
 
     version_rollback =
-      Repo.one(
+      TrackerRepo.one(
         from(v in Version,
           where: v.entity_id == ^user2.id,
           where: v.entity_schema == ^User,
@@ -54,7 +54,7 @@ defmodule RevertTest do
     assert user2_rolled_back.name == "Horst Dieter Schaf"
 
     version_rollback =
-      Repo.one(
+      TrackerRepo.one(
         from(v in Version,
           where: v.entity_id == ^user2.id,
           where: v.entity_schema == ^User,

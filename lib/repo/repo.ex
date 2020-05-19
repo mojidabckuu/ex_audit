@@ -40,9 +40,13 @@ defmodule ExAudit.Repo do
    * `:ignore_audit` - If true, ex_audit will not track changes made to entities
   """
 
-  defmacro __using__(_opts) do
+  defmacro __using__(opts) do
     quote location: :keep do
       @behaviour ExAudit.Repo
+
+      @tracker_repo Keyword.get(unquote(opts), :tracker_repo)
+
+      def tracker_repo, do: @tracker_repo
 
       # These are the Ecto.Repo functions that ExAudit "extends" but these are not
       # marked as overridable in Ecto.Repo. (ecto v3.4.2)
@@ -57,25 +61,33 @@ defmodule ExAudit.Repo do
         delete!: 2
       )
 
-      defp tracked?(struct_or_changeset) do
-        tracked_schemas = Application.get_env(:ex_audit, :tracked_schemas)
+      defp tracked?(struct_or_changeset, opts) do
+        if not Process.get(:ignore_audit, false) do
+          tracked_schemas = Application.get_env(:ex_audit, :tracked_schemas)
 
-        schema =
-          case struct_or_changeset do
-            %Ecto.Changeset{} = changeset ->
-              Map.get(changeset.data, :__struct__)
+          schema =
+            case struct_or_changeset do
+              %Ecto.Changeset{} = changeset ->
+                Map.get(changeset.data, :__struct__)
 
-            _ ->
-              Map.get(struct_or_changeset, :__struct__)
-          end
+              _ ->
+                Map.get(struct_or_changeset, :__struct__)
+            end
 
-        schema in tracked_schemas
+          if tracked_schemas do
+            schema in tracked_schemas
+          end || true
+        end || false
       end
 
-      @compile {:inline, tracked?: 1}
+      @compile {:inline, tracked?: 2}
 
       def insert(struct, opts) do
-        if tracked?(struct) do
+        if opts != nil && Keyword.get(opts, :ignore_audit) != nil do
+          Process.put(:ignore_audit, Keyword.get(opts, :ignore_audit))
+        end
+
+        if tracked?(struct, opts) do
           ExAudit.Schema.insert(
             __MODULE__,
             get_dynamic_repo(),
@@ -88,7 +100,11 @@ defmodule ExAudit.Repo do
       end
 
       def update(struct, opts) do
-        if tracked?(struct) do
+        if opts != nil && Keyword.get(opts, :ignore_audit) != nil do
+          Process.put(:ignore_audit, Keyword.get(opts, :ignore_audit))
+        end
+
+        if tracked?(struct, opts) do
           ExAudit.Schema.update(
             __MODULE__,
             get_dynamic_repo(),
@@ -101,7 +117,11 @@ defmodule ExAudit.Repo do
       end
 
       def insert_or_update(changeset, opts) do
-        if tracked?(changeset) do
+        if opts != nil && Keyword.get(opts, :ignore_audit) != nil do
+          Process.put(:ignore_audit, Keyword.get(opts, :ignore_audit))
+        end
+
+        if tracked?(changeset, opts) do
           ExAudit.Schema.insert_or_update(
             __MODULE__,
             get_dynamic_repo(),
@@ -114,7 +134,11 @@ defmodule ExAudit.Repo do
       end
 
       def delete(struct, opts) do
-        if tracked?(struct) do
+        if opts != nil && Keyword.get(opts, :ignore_audit) != nil do
+          Process.put(:ignore_audit, Keyword.get(opts, :ignore_audit))
+        end
+
+        if tracked?(struct, opts) do
           ExAudit.Schema.delete(
             __MODULE__,
             get_dynamic_repo(),
@@ -127,7 +151,11 @@ defmodule ExAudit.Repo do
       end
 
       def insert!(struct, opts) do
-        if tracked?(struct) do
+        if opts != nil && Keyword.get(opts, :ignore_audit) != nil do
+          Process.put(:ignore_audit, Keyword.get(opts, :ignore_audit))
+        end
+
+        if tracked?(struct, opts) do
           ExAudit.Schema.insert!(
             __MODULE__,
             get_dynamic_repo(),
@@ -140,7 +168,11 @@ defmodule ExAudit.Repo do
       end
 
       def update!(struct, opts) do
-        if tracked?(struct) do
+        if opts != nil && Keyword.get(opts, :ignore_audit) != nil do
+          Process.put(:ignore_audit, Keyword.get(opts, :ignore_audit))
+        end
+
+        if tracked?(struct, opts) do
           ExAudit.Schema.update!(
             __MODULE__,
             get_dynamic_repo(),
@@ -153,7 +185,11 @@ defmodule ExAudit.Repo do
       end
 
       def insert_or_update!(changeset, opts) do
-        if tracked?(changeset) do
+        if opts != nil && Keyword.get(opts, :ignore_audit) != nil do
+          Process.put(:ignore_audit, Keyword.get(opts, :ignore_audit))
+        end
+
+        if tracked?(changeset, opts) do
           ExAudit.Schema.insert_or_update!(
             __MODULE__,
             get_dynamic_repo(),
@@ -166,7 +202,11 @@ defmodule ExAudit.Repo do
       end
 
       def delete!(struct, opts) do
-        if tracked?(struct) do
+        if opts != nil && Keyword.get(opts, :ignore_audit) != nil do
+          Process.put(:ignore_audit, Keyword.get(opts, :ignore_audit))
+        end
+
+        if tracked?(struct, opts) do
           ExAudit.Schema.delete!(
             __MODULE__,
             get_dynamic_repo(),

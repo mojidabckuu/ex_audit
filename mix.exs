@@ -5,20 +5,20 @@ defmodule ExAudit.Mixfile do
     [
       description: "Ecto auditing library that transparently tracks changes and can revert them",
       app: :ex_audit,
-      version: "0.7.0",
+      version: "0.7.1",
       elixir: "~> 1.6",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
+      aliases: aliases(),
       elixirc_paths: paths(Mix.env()),
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [coveralls: :test],
-      source_url: "https://github.com/zenneriot/ex_audit",
+      source_url: "https://github.com/mojidabckuu/ex_audit",
       package: [
         licenses: ["MIT"],
-        maintainers: ["Moritz Schmale <ms@zenner-iot.com>"],
+        maintainers: ["Vlad Gorbenko <vlad.grb@mail.ru>"],
         links: %{
-          "GitHub" => "https://github.com/zenneriot/ex_audit",
-          "Documentation" => "https://hexdocs.pm/ex_audit"
+          "GitHub" => "https://github.com/mojidabckuu/ex_audit"
         }
       ],
       docs: [
@@ -43,6 +43,14 @@ defmodule ExAudit.Mixfile do
     [
       mod: {ExAudit, []},
       extra_applications: [:logger]
+    ]
+  end
+
+  defp aliases do
+    [
+      "ecto.setup": ["ecto.create", "ecto.migrate"],
+      "ecto.reset": ["ecto.drop", "ecto.setup"],
+      test: ["ecto.create --quiet", "ecto.migrate", "test"]
     ]
   end
 

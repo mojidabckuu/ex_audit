@@ -23,7 +23,7 @@ defmodule ExAudit.Tracking do
   def compare_versions(action, old, new) do
     schema = Map.get(old, :__struct__, Map.get(new, :__struct__))
 
-    if schema in tracked_schemas() do
+    if tracked_schemas == nil || schema in tracked_schemas() do
       assocs = schema.__schema__(:associations)
 
       patch =
@@ -52,7 +52,9 @@ defmodule ExAudit.Tracking do
   end
 
   def track_change(module, action, changeset, resulting_struct, opts) do
-    if not Keyword.get(opts, :ignore_audit, false) do
+    ignore_audit = Keyword.get(opts, :ignore_audit) || Process.get(:ignore_audit)
+
+    if not (ignore_audit || false) do
       changes = find_changes(action, changeset, resulting_struct)
 
       insert_versions(module, changes, opts)
@@ -60,7 +62,8 @@ defmodule ExAudit.Tracking do
   end
 
   def insert_versions(module, changes, opts) do
-    now = DateTime.utc_now()
+    now = NaiveDateTime.utc_now()
+    tracker_repo = module.tracker_repo || module
 
     custom_fields =
       Keyword.get(opts, :ex_audit_custom, [])
@@ -78,7 +81,7 @@ defmodule ExAudit.Tracking do
 
       _ ->
         opts = Keyword.drop(opts, [:on_conflict, :conflict_target])
-        module.insert_all(version_schema(), changes, opts)
+        tracker_repo.insert_all(version_schema(), changes, opts)
     end
   end
 
@@ -107,7 +110,6 @@ defmodule ExAudit.Tracking do
 
   def track_assoc_deletion(module, struct, opts) do
     deleted_structs = find_assoc_deletion(module, struct, opts)
-
     insert_versions(module, deleted_structs, opts)
   end
 

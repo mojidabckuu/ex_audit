@@ -18,6 +18,8 @@ defmodule ExAudit.Queryable do
   def history(module, struct, opts) do
     import Ecto.Query
 
+    module = module.tracker_repo || module
+
     query =
       from(
         v in version_schema(),
@@ -81,6 +83,8 @@ defmodule ExAudit.Queryable do
 
     # get the history of the entity after this version
 
+    tracker_module = module.tracker_repo || module
+
     query =
       from(
         v in version_schema(),
@@ -90,7 +94,7 @@ defmodule ExAudit.Queryable do
         order_by: [desc: :recorded_at]
       )
 
-    versions = module.all(query)
+    versions = tracker_module.all(query)
 
     # get the referenced struct as it exists now
 
