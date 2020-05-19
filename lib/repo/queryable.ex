@@ -15,14 +15,10 @@ defmodule ExAudit.Queryable do
     Ecto.Repo.Queryable.delete_all(module, queryable, opts)
   end
 
-  def get_custom_repo do
-    Application.get_env(:ex_audit, :repo)
-  end
-
   def history(module, struct, opts) do
     import Ecto.Query
 
-    module = get_custom_repo() || module
+    module = module.tracker_repo || module
 
     query =
       from(
@@ -87,7 +83,7 @@ defmodule ExAudit.Queryable do
 
     # get the history of the entity after this version
 
-    tracker_module = get_custom_repo() || module
+    tracker_module = module.tracker_repo || module
 
     query =
       from(

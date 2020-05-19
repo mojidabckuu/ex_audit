@@ -40,9 +40,13 @@ defmodule ExAudit.Repo do
    * `:ignore_audit` - If true, ex_audit will not track changes made to entities
   """
 
-  defmacro __using__(_opts) do
+  defmacro __using__(opts) do
     quote location: :keep do
       @behaviour ExAudit.Repo
+
+      @tracker_repo Keyword.get(unquote(opts), :tracker_repo)
+
+      def tracker_repo, do: @tracker_repo
 
       # These are the Ecto.Repo functions that ExAudit "extends" but these are not
       # marked as overridable in Ecto.Repo. (ecto v3.4.2)

@@ -61,6 +61,7 @@ defmodule ExAudit.Tracking do
 
   def insert_versions(module, changes, opts) do
     now = DateTime.utc_now()
+    tracker_repo = module.tracker_repo || module
 
     custom_fields =
       Keyword.get(opts, :ex_audit_custom, [])
@@ -78,7 +79,7 @@ defmodule ExAudit.Tracking do
 
       _ ->
         opts = Keyword.drop(opts, [:on_conflict, :conflict_target])
-        module.insert_all(version_schema(), changes, opts)
+        tracker_repo.insert_all(version_schema(), changes, opts)
     end
   end
 
@@ -107,7 +108,6 @@ defmodule ExAudit.Tracking do
 
   def track_assoc_deletion(module, struct, opts) do
     deleted_structs = find_assoc_deletion(module, struct, opts)
-    module = Application.get_env(:ex_audit, :repo, module)
     insert_versions(module, deleted_structs, opts)
   end
 
