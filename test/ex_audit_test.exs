@@ -144,7 +144,7 @@ defmodule ExAuditTest do
     assert patch:
              %{
                name: {:changed, {:primitive_change, "Admin", "SuperAdmin"}},
-               updated_at: {:changed, %{second: {:changed, {:primitive_change, _, _}}}}
+               updated_at: {:changed, {:primitive_change, _, _}}
              } = updated.patch
   end
 
@@ -197,7 +197,7 @@ defmodule ExAuditTest do
     assert patch:
              %{
                name: {:changed, {:primitive_change, "Admin", "SuperAdmin"}},
-               updated_at: {:changed, %{second: {:changed, {:primitive_change, _, _}}}}
+               updated_at: {:changed, {:primitive_change, _, _}}
              } = updated.patch
   end
 

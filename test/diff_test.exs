@@ -74,4 +74,11 @@ defmodule DiffTest do
              baz: {:removed, 1}
            }
   end
+
+  test "scalar types are represented as it is" do
+    a = %{inserted_at: NaiveDateTime.utc_now()}
+    b = %{inserted_at: NaiveDateTime.utc_now()}
+
+    assert %{inserted_at: {:changed, {:primitive_change, _, _}}} = Diff.diff(a, b)
+  end
 end

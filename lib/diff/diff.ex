@@ -21,6 +21,12 @@ defmodule ExAudit.Diff do
 
   @undefined :"$undefined"
 
+  def is_scalar?(value) when is_struct(value) do
+    scalar_types = Application.get_env(:ex_audit, :scalar_types, [])
+    value.__struct__ in scalar_types
+  end
+  def is_scalar?(_value), do: false
+
   @doc """
   Creates a patch that can be used to go from a to b with the ExAudit.Patch.patch function
   """
@@ -29,6 +35,14 @@ defmodule ExAudit.Diff do
 
   def diff(a, a) do
     :not_changed
+  end
+
+  def diff(a, b) when is_struct(a) and is_struct(b) do
+    if is_scalar?(a) and is_scalar?(b) do
+      {:primitive_change, a, b}
+    else
+      diff(Map.from_struct(a), Map.from_struct(b))
+    end
   end
 
   def diff(%{} = a, %{} = b) do
