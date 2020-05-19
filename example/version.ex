@@ -7,8 +7,9 @@ defmodule ExAudit.Test.Version do
     field :entity_id, :integer
     field :entity_schema, ExAudit.Type.Schema
     field :action, ExAudit.Type.Action
-    field :recorded_at, :utc_datetime_usec
+    field :recorded_at, :naive_datetime_usec
     field :rollback, :boolean, default: false
+    field :version, Ecto.UUID
 
     # custom fields
     belongs_to :actor, ExAudit.Test.User

@@ -16,7 +16,7 @@ defmodule ExAudit.Test.TrackerRepo.Migrations.CreateSchemaVersions do
       add :action, :string
 
       # when has this happened
-      add :recorded_at, :utc_datetime_usec
+      add :recorded_at, :naive_datetime_usec
 
       # was this change part of a rollback?
       add :rollback, :boolean, default: false
@@ -24,6 +24,7 @@ defmodule ExAudit.Test.TrackerRepo.Migrations.CreateSchemaVersions do
       # optional fields that you can define yourself
       # for example, it's a good idea to track who did the change
       add :actor_id, :integer
+      add :version, :uuid
     end
   end
 end
