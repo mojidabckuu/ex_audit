@@ -38,7 +38,7 @@ defmodule ExAudit.Test.Repo.Migrations.InitialTables do
 
     create table(:versions) do
       # The patch in Erlang External Term Format
-      add :patch, :binary
+      add :patch, :json
 
       # supports UUID and other types as well
       add :entity_id, :integer

@@ -3,7 +3,7 @@ defmodule ExAudit.Test.Version do
   import Ecto.Changeset
 
   schema "versions" do
-    field :patch, ExAudit.Type.Patch
+    field :patch, ExAudit.Type.PatchMap
     field :entity_id, :integer
     field :entity_schema, ExAudit.Type.Schema
     field :action, ExAudit.Type.Action
