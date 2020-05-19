@@ -3,7 +3,7 @@ defmodule AssocTest do
 
   import Ecto.Query
 
-  alias ExAudit.Test.{Repo, Version, BlogPost, Comment, Util, UserGroup}
+  alias ExAudit.Test.{TrackerRepo, Repo, Version, BlogPost, Comment, Util, UserGroup}
 
   test "comment lifecycle tracked" do
     user = Util.create_user()
@@ -61,7 +61,7 @@ defmodule AssocTest do
     comment_ids = Enum.map(comments, & &1.id)
 
     versions =
-      Repo.all(
+      TrackerRepo.all(
         from(v in Version,
           where: v.entity_id in ^comment_ids,
           where: v.entity_schema == ^Comment

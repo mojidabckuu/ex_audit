@@ -4,7 +4,7 @@ defmodule ExAuditTest do
 
   import Ecto.Query
 
-  alias ExAudit.Test.{Repo, User, Version, BlogPost, Util}
+  alias ExAudit.Test.{TrackerRepo, Repo, User, Version, BlogPost, Util}
 
   test "should document lifecycle of an entity" do
     params = %{
@@ -20,7 +20,7 @@ defmodule ExAuditTest do
     assert params.email == user.email
 
     version =
-      Repo.one(
+      TrackerRepo.one(
         from(v in Version,
           where: v.entity_id == ^user.id,
           where: v.entity_schema == ^User,
@@ -41,7 +41,7 @@ defmodule ExAuditTest do
     {:ok, user} = Repo.update(changeset)
 
     version =
-      Repo.one(
+      TrackerRepo.one(
         from(v in Version,
           where: v.entity_id == ^user.id,
           where: v.entity_schema == ^User,
@@ -55,7 +55,7 @@ defmodule ExAuditTest do
     {:ok, user} = Repo.delete(user)
 
     version =
-      Repo.one(
+      TrackerRepo.one(
         from(v in Version,
           where: v.entity_id == ^user.id,
           where: v.entity_schema == ^User,
@@ -65,7 +65,7 @@ defmodule ExAuditTest do
 
     assert not is_nil(version)
 
-    versions = Repo.history(user)
+    versions = TrackerRepo.history(user)
 
     assert length(versions) == 3
   end
@@ -82,7 +82,7 @@ defmodule ExAuditTest do
     {:ok, blog_post} = Repo.insert(changeset, ex_audit_custom: [actor_id: user.id])
 
     version =
-      Repo.one(
+      TrackerRepo.one(
         from(v in Version,
           where: v.entity_id == ^blog_post.id,
           where: v.entity_schema == ^BlogPost,
@@ -108,7 +108,7 @@ defmodule ExAuditTest do
       )
 
     created =
-      Repo.one(
+      TrackerRepo.one(
         from(v in Version,
           where: v.entity_id == ^user.id,
           where: v.entity_schema == ^User,
@@ -117,7 +117,7 @@ defmodule ExAuditTest do
       )
 
     updated =
-      Repo.one(
+      TrackerRepo.one(
         from(v in Version,
           where: v.entity_id == ^user.id,
           where: v.entity_schema == ^User,
@@ -126,7 +126,7 @@ defmodule ExAuditTest do
       )
 
     assert 2 =
-             Repo.one(
+             TrackerRepo.one(
                from(v in Version,
                  where: v.entity_id == ^user.id,
                  where: v.entity_schema == ^User,
@@ -161,7 +161,7 @@ defmodule ExAuditTest do
       )
 
     created =
-      Repo.one(
+      TrackerRepo.one(
         from(v in Version,
           where: v.entity_id == ^user.id,
           where: v.entity_schema == ^User,
@@ -170,7 +170,7 @@ defmodule ExAuditTest do
       )
 
     updated =
-      Repo.one(
+      TrackerRepo.one(
         from(v in Version,
           where: v.entity_id == ^user.id,
           where: v.entity_schema == ^User,
@@ -179,7 +179,7 @@ defmodule ExAuditTest do
       )
 
     assert 2 =
-             Repo.one(
+             TrackerRepo.one(
                from(v in Version,
                  where: v.entity_id == ^user.id,
                  where: v.entity_schema == ^User,
@@ -215,7 +215,7 @@ defmodule ExAuditTest do
     {:ok, blog_post} = Repo.insert(changeset)
 
     version =
-      Repo.one(
+      TrackerRepo.one(
         from(v in Version,
           where: v.entity_id == ^blog_post.id,
           where: v.entity_schema == ^BlogPost,
@@ -243,6 +243,6 @@ defmodule ExAuditTest do
         where: v.entity_schema == ^User
       )
 
-    assert 2 = Repo.aggregate(query, :count, :id)
+    assert 2 = TrackerRepo.aggregate(query, :count, :id)
   end
 end

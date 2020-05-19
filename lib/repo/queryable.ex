@@ -15,8 +15,14 @@ defmodule ExAudit.Queryable do
     Ecto.Repo.Queryable.delete_all(module, queryable, opts)
   end
 
+  def get_custom_repo do
+    Application.get_env(:ex_audit, :repo)
+  end
+
   def history(module, struct, opts) do
     import Ecto.Query
+
+    module = get_custom_repo() || module
 
     query =
       from(
@@ -81,6 +87,8 @@ defmodule ExAudit.Queryable do
 
     # get the history of the entity after this version
 
+    tracker_module = get_custom_repo() || module
+
     query =
       from(
         v in version_schema(),
@@ -90,7 +98,7 @@ defmodule ExAudit.Queryable do
         order_by: [desc: :recorded_at]
       )
 
-    versions = module.all(query)
+    versions = tracker_module.all(query)
 
     # get the referenced struct as it exists now
 

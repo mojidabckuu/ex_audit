@@ -107,7 +107,7 @@ defmodule ExAudit.Tracking do
 
   def track_assoc_deletion(module, struct, opts) do
     deleted_structs = find_assoc_deletion(module, struct, opts)
-
+    module = Application.get_env(:ex_audit, :repo, module)
     insert_versions(module, deleted_structs, opts)
   end
 

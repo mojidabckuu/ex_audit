@@ -1,4 +1,6 @@
 defmodule ExAudit.Schema do
+  @repo Application.get_env(:ex_audit, :repo) || __MODULE__
+
   def insert_all(module, name, schema_or_source, entries, opts) do
     # TODO!
     opts = augment_opts(opts)
@@ -13,7 +15,7 @@ defmodule ExAudit.Schema do
 
       case result do
         {:ok, resulting_struct} ->
-          ExAudit.Tracking.track_change(module, :created, struct, resulting_struct, opts)
+          ExAudit.Tracking.track_change(@repo, :created, struct, resulting_struct, opts)
 
         _ ->
           :ok
@@ -31,7 +33,7 @@ defmodule ExAudit.Schema do
 
       case result do
         {:ok, resulting_struct} ->
-          ExAudit.Tracking.track_change(module, :updated, struct, resulting_struct, opts)
+          ExAudit.Tracking.track_change(@repo, :updated, struct, resulting_struct, opts)
 
         _ ->
           :ok
@@ -50,7 +52,7 @@ defmodule ExAudit.Schema do
       case result do
         {:ok, resulting_struct} ->
           state = if changeset.data.__meta__.state == :loaded, do: :updated, else: :created
-          ExAudit.Tracking.track_change(module, state, changeset, resulting_struct, opts)
+          ExAudit.Tracking.track_change(@repo, state, changeset, resulting_struct, opts)
 
         _ ->
           :ok
@@ -69,7 +71,7 @@ defmodule ExAudit.Schema do
 
       case result do
         {:ok, resulting_struct} ->
-          ExAudit.Tracking.track_change(module, :deleted, struct, resulting_struct, opts)
+          ExAudit.Tracking.track_change(@repo, :deleted, struct, resulting_struct, opts)
 
         _ ->
           :ok
@@ -86,7 +88,7 @@ defmodule ExAudit.Schema do
       module,
       fn ->
         result = Ecto.Repo.Schema.insert!(module, name, struct, opts)
-        ExAudit.Tracking.track_change(module, :created, struct, result, opts)
+        ExAudit.Tracking.track_change(@repo, :created, struct, result, opts)
         result
       end,
       true
@@ -100,7 +102,7 @@ defmodule ExAudit.Schema do
       module,
       fn ->
         result = Ecto.Repo.Schema.update!(module, name, struct, opts)
-        ExAudit.Tracking.track_change(module, :updated, struct, result, opts)
+        ExAudit.Tracking.track_change(@repo, :updated, struct, result, opts)
         result
       end,
       true
@@ -115,7 +117,7 @@ defmodule ExAudit.Schema do
       fn ->
         result = Ecto.Repo.Schema.insert_or_update!(module, name, changeset, opts)
         state = if changeset.data.__meta__.state == :loaded, do: :updated, else: :created
-        ExAudit.Tracking.track_change(module, state, changeset, result, opts)
+        ExAudit.Tracking.track_change(@repo, state, changeset, result, opts)
         result
       end,
       true
@@ -128,9 +130,9 @@ defmodule ExAudit.Schema do
     augment_transaction(
       module,
       fn ->
-        ExAudit.Tracking.track_assoc_deletion(module, struct, opts)
+        ExAudit.Tracking.track_assoc_deletion(@repo, struct, opts)
         result = Ecto.Repo.Schema.delete!(module, name, struct, opts)
-        ExAudit.Tracking.track_change(module, :deleted, struct, result, opts)
+        ExAudit.Tracking.track_change(@repo, :deleted, struct, result, opts)
         result
       end,
       true
