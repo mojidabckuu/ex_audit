@@ -1,4 +1,4 @@
-defmodule ExAudit.Type.Schema do
+defmodule ExAudit.Type.SchemaTable do
   use Ecto.Type
 
   def cast(schema) when is_atom(schema) do
