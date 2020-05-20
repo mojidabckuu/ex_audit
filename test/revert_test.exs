@@ -8,7 +8,7 @@ defmodule RevertTest do
   test "should revert changes" do
     user = Util.create_user()
 
-    ExAudit.track(actor_id: user.id)
+    ExAudit.track(%{actor_id: user.id})
 
     user2 = Util.create_user("Horst Dieter Schaf", "horst.dieter@schaf.de")
 

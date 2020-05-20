@@ -13,7 +13,7 @@ defmodule AssocTest do
   test "comment lifecycle tracked" do
     user = Util.create_user()
 
-    ExAudit.track(actor_id: user.id)
+    ExAudit.track(%{actor_id: user.id})
 
     params = %{
       title: "Controversial post",
@@ -37,7 +37,7 @@ defmodule AssocTest do
   test "should track cascading deletions (before they happen)" do
     user = Util.create_user()
 
-    ExAudit.track(actor_id: user.id)
+    ExAudit.track(%{actor_id: user.id})
 
     params = %{
       title: "Controversial post",
@@ -94,10 +94,10 @@ defmodule AssocTest do
   end
 
   test "should ignore audit" do
-    ExAudit.track(version: Ecto.UUID.generate())
+    ExAudit.track(%{version: Ecto.UUID.generate()})
     user = Util.create_user()
 
-    ExAudit.track(actor_id: user.id)
+    ExAudit.track(%{actor_id: user.id}, override: true)
 
     params = %{
       title: "Controversial post",

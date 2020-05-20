@@ -210,7 +210,7 @@ defmodule ExAuditTest do
         title: "My Second Post"
       })
 
-    ExAudit.track(actor_id: user.id)
+    ExAudit.track(%{actor_id: user.id})
 
     {:ok, blog_post} = Repo.insert(changeset)
 

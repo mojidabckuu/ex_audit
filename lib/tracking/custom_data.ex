@@ -14,13 +14,26 @@ defmodule ExAudit.CustomData do
     {:ok, ets}
   end
 
-  def track(pid, data) do
-    GenServer.call(__MODULE__, {:store, pid, data})
+  def track(pid, data, opts) when is_map(data) do
+    GenServer.call(__MODULE__, {:store, pid, data, opts})
   end
 
-  def handle_call({:store, pid, data}, _, ets) do
-    :ets.insert(ets, {pid, data})
-    Process.monitor(pid)
+  def handle_call({:store, pid, data, opts}, _, ets) do
+    new_data =
+      case :ets.lookup(ets, pid) do
+        [{_pid, old_data}] ->
+          if Keyword.get(opts, :override, false) do
+            data
+          else
+            Map.merge(old_data, data)
+          end
+
+        [] ->
+          Process.monitor(pid)
+          data
+      end
+
+    :ets.insert(ets, {pid, new_data})
     {:reply, :ok, ets}
   end
 
