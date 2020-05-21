@@ -82,140 +82,149 @@ defmodule ExAudit.Repo do
 
       @compile {:inline, tracked?: 2}
 
-      def insert(struct, opts) do
+      defp wrap_ignore(struct, opts, func) do
+        prev_val = Process.get(:ignore_audit)
+
+        IO.puts("before #{struct.__struct__} #{tracked?(struct, opts)} #{inspect self()}")
+
         if opts != nil && Keyword.get(opts, :ignore_audit) != nil do
           Process.put(:ignore_audit, Keyword.get(opts, :ignore_audit))
         end
 
-        if tracked?(struct, opts) do
-          ExAudit.Schema.insert(
-            __MODULE__,
-            get_dynamic_repo(),
-            struct,
-            opts
-          )
+        result = func.()
+
+        if prev_val do
+          Process.put(:ignore_audit, prev_val)
         else
-          super(struct, opts)
+          Process.delete(:ignore_audit)
         end
+
+        IO.puts("after #{struct.__struct__} #{tracked?(struct, opts)} #{inspect self()}")
+
+        result
+      end
+
+      def insert(struct, opts) do
+        wrap_ignore(struct, opts, fn ->
+          IO.puts "insert call #{struct.__struct__}"
+          if tracked?(struct, opts) do
+            ExAudit.Schema.insert(
+              __MODULE__,
+              get_dynamic_repo(),
+              struct,
+              opts
+            )
+          else
+            super(struct, opts)
+          end
+        end)
       end
 
       def update(struct, opts) do
-        if opts != nil && Keyword.get(opts, :ignore_audit) != nil do
-          Process.put(:ignore_audit, Keyword.get(opts, :ignore_audit))
-        end
-
-        if tracked?(struct, opts) do
-          ExAudit.Schema.update(
-            __MODULE__,
-            get_dynamic_repo(),
-            struct,
-            opts
-          )
-        else
-          super(struct, opts)
-        end
+        wrap_ignore(struct, opts, fn ->
+          if tracked?(struct, opts) do
+            ExAudit.Schema.update(
+              __MODULE__,
+              get_dynamic_repo(),
+              struct,
+              opts
+            )
+          else
+            super(struct, opts)
+          end
+        end)
       end
 
       def insert_or_update(changeset, opts) do
-        if opts != nil && Keyword.get(opts, :ignore_audit) != nil do
-          Process.put(:ignore_audit, Keyword.get(opts, :ignore_audit))
-        end
-
-        if tracked?(changeset, opts) do
-          ExAudit.Schema.insert_or_update(
-            __MODULE__,
-            get_dynamic_repo(),
-            changeset,
-            opts
-          )
-        else
-          super(changeset, opts)
-        end
+        wrap_ignore(changeset, opts, fn ->
+          if tracked?(changeset, opts) do
+            ExAudit.Schema.insert_or_update(
+              __MODULE__,
+              get_dynamic_repo(),
+              changeset,
+              opts
+            )
+          else
+            super(changeset, opts)
+          end
+        end)
       end
 
       def delete(struct, opts) do
-        if opts != nil && Keyword.get(opts, :ignore_audit) != nil do
-          Process.put(:ignore_audit, Keyword.get(opts, :ignore_audit))
-        end
-
-        if tracked?(struct, opts) do
-          ExAudit.Schema.delete(
-            __MODULE__,
-            get_dynamic_repo(),
-            struct,
-            opts
-          )
-        else
-          super(struct, opts)
-        end
+        wrap_ignore(struct, opts, fn ->
+          if tracked?(struct, opts) do
+            ExAudit.Schema.delete(
+              __MODULE__,
+              get_dynamic_repo(),
+              struct,
+              opts
+            )
+          else
+            super(struct, opts)
+          end
+        end)
       end
 
       def insert!(struct, opts) do
-        if opts != nil && Keyword.get(opts, :ignore_audit) != nil do
-          Process.put(:ignore_audit, Keyword.get(opts, :ignore_audit))
-        end
+        wrap_ignore(struct, opts, fn ->
+          IO.puts "insert! call #{struct.__struct__}"
 
-        if tracked?(struct, opts) do
-          ExAudit.Schema.insert!(
-            __MODULE__,
-            get_dynamic_repo(),
-            struct,
-            opts
-          )
-        else
-          super(struct, opts)
-        end
+          if tracked?(struct, opts) do
+            ExAudit.Schema.insert!(
+              __MODULE__,
+              get_dynamic_repo(),
+              struct,
+              opts
+            )
+          else
+            super(struct, opts)
+          end
+        end)
       end
 
       def update!(struct, opts) do
-        if opts != nil && Keyword.get(opts, :ignore_audit) != nil do
-          Process.put(:ignore_audit, Keyword.get(opts, :ignore_audit))
-        end
-
-        if tracked?(struct, opts) do
-          ExAudit.Schema.update!(
-            __MODULE__,
-            get_dynamic_repo(),
-            struct,
-            opts
-          )
-        else
-          super(struct, opts)
-        end
+        wrap_ignore(struct, opts, fn ->
+          if tracked?(struct, opts) do
+            ExAudit.Schema.update!(
+              __MODULE__,
+              get_dynamic_repo(),
+              struct,
+              opts
+            )
+          else
+            super(struct, opts)
+          end
+        end)
       end
 
       def insert_or_update!(changeset, opts) do
-        if opts != nil && Keyword.get(opts, :ignore_audit) != nil do
-          Process.put(:ignore_audit, Keyword.get(opts, :ignore_audit))
-        end
-
-        if tracked?(changeset, opts) do
-          ExAudit.Schema.insert_or_update!(
-            __MODULE__,
-            get_dynamic_repo(),
-            changeset,
-            opts
-          )
-        else
-          super(changeset, opts)
-        end
+        wrap_ignore(changeset, opts, fn ->
+          if tracked?(changeset, opts) do
+            ExAudit.Schema.insert_or_update!(
+              __MODULE__,
+              get_dynamic_repo(),
+              changeset,
+              opts
+            )
+          else
+            super(changeset, opts)
+          end
+        end)
       end
 
       def delete!(struct, opts) do
-        if opts != nil && Keyword.get(opts, :ignore_audit) != nil do
-          Process.put(:ignore_audit, Keyword.get(opts, :ignore_audit))
-        end
-
-        if tracked?(struct, opts) do
-          ExAudit.Schema.delete!(
-            __MODULE__,
-            get_dynamic_repo(),
-            struct,
-            opts
-          )
-        else
-          super(struct, opts)
-        end
+        wrap_ignore(struct, opts, fn ->
+          if tracked?(struct, opts) do
+            ExAudit.Schema.delete!(
+              __MODULE__,
+              get_dynamic_repo(),
+              struct,
+              opts
+            )
+          else
+            super(struct, opts)
+          end
+        end)
       end
 
       # ExAudit.Repo behaviour
