@@ -51,14 +51,17 @@ defmodule ExAudit.Tracking do
     end
   end
 
-  def track_change(module, action, changeset, resulting_struct, opts) do
-    ignore_audit = Keyword.get(opts, :ignore_audit) || Process.get(:ignore_audit)
+  require Logger
 
-    if not (ignore_audit || false) do
+  def track_change(module, action, changeset, resulting_struct, opts) do
+    Logger.debug("do track: #{inspect changeset}")
+    # ignore_audit = Keyword.get(opts, :ignore_audit) || Process.get(:ignore_audit)
+
+    # if not (ignore_audit || false) do
       changes = find_changes(action, changeset, resulting_struct)
 
       insert_versions(module, changes, opts)
-    end
+    # end
   end
 
   def insert_versions(module, changes, opts) do

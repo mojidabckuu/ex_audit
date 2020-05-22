@@ -3,7 +3,7 @@ defmodule AssocTest do
 
   import Ecto.Query
 
-  alias ExAudit.Test.{TrackerRepo, Repo, Version, BlogPost, Comment, Util, UserGroup}
+  alias ExAudit.Test.{TrackerRepo, Repo, Version, BlogPost, Comment, Util, UserGroup, Avatar, User}
 
   setup _ do
     :erlang.system_flag(:backtrace_depth, 50)
@@ -110,10 +110,32 @@ defmodule AssocTest do
       ]
     }
 
+    ExAudit.track(%{version: Ecto.UUID.generate()})
+
     changeset = BlogPost.changeset(%BlogPost{}, params)
     {:ok, %{comments: [comment]} = blog} = Repo.insert(changeset, ignore_audit: true)
 
     assert [] = Repo.history(blog)
     assert [] = Repo.history(comment)
+  end
+
+  test "applies changes to ebmedded schemas" do
+    ExAudit.track(%{version: Ecto.UUID.generate()})
+    user = Util.create_user()
+    ExAudit.track(%{actor_id: user.id})
+
+    attrs = %{
+      avatars: [
+        %{url: "http://example.com/1.jpeg"}
+      ]
+    }
+
+    changeset =
+      user
+      |> User.changeset(attrs)
+
+    {:ok, user} = Repo.update(changeset)
+
+    assert [_, _] = Repo.history(user)
   end
 end

@@ -61,23 +61,35 @@ defmodule ExAudit.Repo do
         delete!: 2
       )
 
+      require Logger
+
+      defp log(text) do
+        Logger.debug(text, ansi_color: :blue)
+      end
+
+      defp is_in_tracked_schemas?(struct_or_changeset) do
+        tracked_schemas = Application.get_env(:ex_audit, :tracked_schemas)
+
+        schema =
+          case struct_or_changeset do
+            %Ecto.Changeset{} = changeset ->
+              Map.get(changeset.data, :__struct__)
+
+            _ ->
+              Map.get(struct_or_changeset, :__struct__)
+          end
+
+        if tracked_schemas do
+          schema in tracked_schemas
+        end || true
+      end
+
       defp tracked?(struct_or_changeset, opts) do
-        if not Process.get(:ignore_audit, false) do
-          tracked_schemas = Application.get_env(:ex_audit, :tracked_schemas)
+        ignored = Process.get(:ignore_audit, false)
 
-          schema =
-            case struct_or_changeset do
-              %Ecto.Changeset{} = changeset ->
-                Map.get(changeset.data, :__struct__)
+        log("should track?: #{!ignored && is_in_tracked_schemas?(struct_or_changeset)} -- ignored: #{ignored} in_schemas? #{is_in_tracked_schemas?(struct_or_changeset)}")
 
-              _ ->
-                Map.get(struct_or_changeset, :__struct__)
-            end
-
-          if tracked_schemas do
-            schema in tracked_schemas
-          end || true
-        end || false
+        !ignored && is_in_tracked_schemas?(struct_or_changeset)
       end
 
       @compile {:inline, tracked?: 2}
@@ -85,7 +97,7 @@ defmodule ExAudit.Repo do
       defp wrap_ignore(struct, opts, func) do
         prev_val = Process.get(:ignore_audit)
 
-        IO.puts("before #{struct.__struct__} #{tracked?(struct, opts)} #{inspect self()}")
+        log("before #{inspect struct} #{tracked?(struct, opts)} #{inspect(self())}")
 
         if opts != nil && Keyword.get(opts, :ignore_audit) != nil do
           Process.put(:ignore_audit, Keyword.get(opts, :ignore_audit))
@@ -99,15 +111,18 @@ defmodule ExAudit.Repo do
           Process.delete(:ignore_audit)
         end
 
-        IO.puts("after #{struct.__struct__} #{tracked?(struct, opts)} #{inspect self()}")
+        log("after #{inspect struct} #{tracked?(struct, opts)} #{inspect(self())}")
 
         result
       end
 
       def insert(struct, opts) do
         wrap_ignore(struct, opts, fn ->
-          IO.puts "insert call #{struct.__struct__}"
-          if tracked?(struct, opts) do
+          log("insert call #{inspect struct}")
+
+          if tracked = tracked?(struct, opts) do
+            log("Is tracked? #{inspect(tracked)} #{inspect(struct)}")
+
             ExAudit.Schema.insert(
               __MODULE__,
               get_dynamic_repo(),
@@ -167,7 +182,7 @@ defmodule ExAudit.Repo do
 
       def insert!(struct, opts) do
         wrap_ignore(struct, opts, fn ->
-          IO.puts "insert! call #{struct.__struct__}"
+          log("insert! call #{struct.__struct__}")
 
           if tracked?(struct, opts) do
             ExAudit.Schema.insert!(
