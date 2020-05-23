@@ -41,5 +41,9 @@ defmodule ExAudit.Test.Repo.Migrations.InitialTables do
 
       timestamps(type: :utc_datetime)
     end
+
+    create table(:reviews) do
+      add(:text, :text)
+    end
   end
 end

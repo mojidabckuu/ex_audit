@@ -84,12 +84,36 @@ defmodule ExAudit.Repo do
         end || true
       end
 
+      def is_in_ignored_schemas?(struct_or_changeset) do
+        schemas = Application.get_env(:ex_audit, :ignored_schemas)
+
+        schema =
+          case struct_or_changeset do
+            %Ecto.Changeset{} = changeset ->
+              Map.get(changeset.data, :__struct__)
+
+            _ ->
+              Map.get(struct_or_changeset, :__struct__)
+          end
+
+        if schemas do
+          schema in schemas
+        end || false
+      end
+
       defp tracked?(struct_or_changeset, opts) do
         ignored = Process.get(:ignore_audit, false)
 
-        log("should track?: #{!ignored && is_in_tracked_schemas?(struct_or_changeset)} -- ignored: #{ignored} in_schemas? #{is_in_tracked_schemas?(struct_or_changeset)}")
+        log(
+          "should track?: #{!ignored && is_in_tracked_schemas?(struct_or_changeset)} -- ignored: #{
+            ignored
+          } in_schemas? #{is_in_tracked_schemas?(struct_or_changeset)} in ignore: #{
+            is_in_ignored_schemas?(struct_or_changeset)
+          }"
+        )
 
-        !ignored && is_in_tracked_schemas?(struct_or_changeset)
+        !ignored && !is_in_ignored_schemas?(struct_or_changeset) &&
+          is_in_tracked_schemas?(struct_or_changeset)
       end
 
       @compile {:inline, tracked?: 2}
@@ -97,7 +121,7 @@ defmodule ExAudit.Repo do
       defp wrap_ignore(struct, opts, func) do
         prev_val = Process.get(:ignore_audit)
 
-        log("before #{inspect struct} #{tracked?(struct, opts)} #{inspect(self())}")
+        log("before #{inspect(struct)} #{tracked?(struct, opts)} #{inspect(self())}")
 
         if opts != nil && Keyword.get(opts, :ignore_audit) != nil do
           Process.put(:ignore_audit, Keyword.get(opts, :ignore_audit))
@@ -111,14 +135,14 @@ defmodule ExAudit.Repo do
           Process.delete(:ignore_audit)
         end
 
-        log("after #{inspect struct} #{tracked?(struct, opts)} #{inspect(self())}")
+        log("after #{inspect(struct)} #{tracked?(struct, opts)} #{inspect(self())}")
 
         result
       end
 
       def insert(struct, opts) do
         wrap_ignore(struct, opts, fn ->
-          log("insert call #{inspect struct}")
+          log("insert call #{inspect(struct)}")
 
           if tracked = tracked?(struct, opts) do
             log("Is tracked? #{inspect(tracked)} #{inspect(struct)}")

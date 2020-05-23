@@ -23,6 +23,9 @@ config :logger, level: :debug
 config :ex_audit,
   ecto_repos: [ExAudit.Test.Repo, ExAudit.Test.TrackerRepo],
   version_schema: ExAudit.Test.Version,
+  ignored_schemas: [
+    ExAudit.Test.Review
+  ],
   tracked_schemas: [
     ExAudit.Test.User,
     ExAudit.Test.BlogPost,

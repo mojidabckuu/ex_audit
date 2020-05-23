@@ -4,7 +4,7 @@ defmodule ExAuditTest do
 
   import Ecto.Query
 
-  alias ExAudit.Test.{TrackerRepo, Repo, User, Version, BlogPost, Util}
+  alias ExAudit.Test.{TrackerRepo, Repo, User, Version, BlogPost, Util, Review}
 
   test "should document lifecycle of an entity" do
     params = %{
@@ -244,5 +244,14 @@ defmodule ExAuditTest do
       )
 
     assert 2 = TrackerRepo.aggregate(query, :count, :id)
+  end
+
+  test "ignored doesn't track" do
+    {:ok, review} =
+      %Review{}
+      |> Review.changeset(%{"text" => "hello"})
+      |> Repo.insert()
+
+    assert [] = TrackerRepo.history(review)
   end
 end

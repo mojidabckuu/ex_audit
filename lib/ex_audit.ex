@@ -25,4 +25,16 @@ defmodule ExAudit do
   def track_pid(pid, data, opts \\ []) do
     ExAudit.CustomData.track(pid, data, opts)
   end
+
+  def ignore_schema(schema) do
+    schemas = Application.get_env(:ex_audit, :ignored_schemas, [])
+    schemas = [schema | schemas]
+    Application.put_env(:ex_audit, :ignored_schemas, schemas)
+  end
+
+  def ignore_schemas(schemas) do
+    the_schemas = Application.get_env(:ex_audit, :ignored_schemas, [])
+    the_schemas = the_schemas ++ schemas
+    Application.put_env(:ex_audit, :ignored_schemas, the_schemas)
+  end
 end
