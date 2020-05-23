@@ -6,7 +6,6 @@ defmodule ExAudit.Type.PatchMap do
   def cast(a), do: {:ok, a}
 
   def dump(patch) do
-    IO.puts("ENCODE: #{inspect(patch)}")
     {:ok, encode(patch)}
   end
 
